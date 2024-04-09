@@ -723,7 +723,7 @@ import numpy as np
 import csv
 import ast
 from numpy.random import randint
-
+import sys
 
 # to get the current working directory
 directory = "/Users/Tharindu/Library/CloudStorage/OneDrive-McMasterUniversity/for_lab_and_research/Tharindu_on_Mac/lab/python_projects/population_comparison/More_efficient_pop_comp_new"
