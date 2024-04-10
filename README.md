@@ -11,9 +11,6 @@ echo -e "#CHROM\tPOS\tREF\tF_Ghana_WZ_BJE4687_combined__sorted.bam\tF_IvoryCoast
 
 created a smaller test file to test my codes first
 
-```
-head -500 no_empty_all_chrs.tab>testing.tab
-```
 Then run this on local computer if your files are not super big
 
 ```python
@@ -42,6 +39,8 @@ import numpy as np
 import csv
 import ast
 from numpy.random import randint
+from itertools import chain
+import sys
 
 
 # to get the current working directory
@@ -221,6 +220,7 @@ if using_all_combos=='N':
     print('\n\n***************************\n')
     #time.sleep(2.5)
     file_with_locs = file_with_locs[file_with_locs.ne('./.').all(1)]
+    file_with_locs = file_with_locs[file_with_locs.ne('*').all(1)]
 
 
     # ***** pop1******
@@ -435,26 +435,73 @@ else:
     # get all the possible populatiopn combinations
     
     import itertools
-    pop_lists=[my_samp_list,my_samp_list,my_samp_list]
+    
+    # ask for population lists to use as pop1 , 2 and 3
+    
+    s_list_1=input('\n Please enter the file name with first population list\n')
+    s_list_2=input('\n Please enter the file name with second population list\n')
+    s_list_3=input('\n Please enter the file name with third population list\n')
+    
+    
+    file1 = open(s_list_1, "r")
+    list1=list(csv.reader(file1, delimiter="\t"))
+    list1=list(chain.from_iterable(list1))
+    
+    file2 = open(s_list_2, "r")
+    list2=list(csv.reader(file2, delimiter="\t"))
+    list2=list(chain.from_iterable(list2))
+    
+    
+    file3 = open(s_list_3, "r")
+    list3=list(csv.reader(file3, delimiter="\t"))
+    list3=list(chain.from_iterable(list3))
+    
+    pop_lists=[list1,list2,list3]
+    
+    #pop_lists=[my_samp_list,my_samp_list,my_samp_list]
     
     
     #get all combinations
     all_pop_combinations=list(itertools.product(*pop_lists))
     
+    
     #remove duplicates
     combination_list=list({*map(tuple, map(sorted, all_pop_combinations))})
+
     
+    #convert list to df
+    combination_list=pd.DataFrame(combination_list)
+    
+    #drop cols rows with equal vals
+    combination_list = combination_list.drop(combination_list[combination_list[0] == combination_list[1]].index)
+    
+    print('Saving a list of all possible combinations')
+    combination_list.to_csv('combination_list.tsv',sep='\t',index=False)
+    
+    combination_file_desicion=input('Do you want to run this for all possible combinations (Y/N)?')
+    if combination_file_desicion=='Y':
+        combination_file='combination_list.tsv'
+    else:
+        combination_file=input('Please enter the customized combination file name')
+    
+    
+    
+    combination_list=pd.read_table(combination_file)
+    combination_list.columns=['p1','p2','p3']
+        
     # Create df to store data
     summary_df = pd.DataFrame(columns=['p1','p2','p3','all equal','a=b','a=c','b=c'])
     
     for combo in range(0,len(combination_list)) :
         
     
-        p1=combination_list[combo][0]
-        p2=combination_list[combo][1]
-        p3=combination_list[combo][2]
+        p1=combination_list['p1'][combo]
+        p2=combination_list['p2'][combo]
+        p3=combination_list['p3'][combo]
         
         if p1!=p2 and p1!=p3 and p2!=p3:
+            
+            print('Running iteration '+str(combo)+' out of total'+str(len(combination_list)))
         
             #avoid using same individual as different pops
             
@@ -479,8 +526,9 @@ else:
             print('\n\n***************************\n')
             print('Removing empties')
             print('\n\n***************************\n')
-            time.sleep(2.5)
+            #time.sleep(2.5)
             file_with_locs = file_with_locs[file_with_locs.ne('./.').all(1)]
+            file_with_locs = file_with_locs[file_with_locs.ne('*').all(1)]
             
             
             # ***** pop1******
@@ -690,14 +738,72 @@ else:
             summary_df.loc[len(summary_df.index)] = to_write
             
             # saving as tsv file 
-            summary_df.to_csv('full_summary.tsv', sep="\t",index=False)
+            summary_df.to_csv('full_summary_testing.tsv', sep="\t",index=False)
 ```
-# or try in on computecanada for larger files with following script
 
-# ****EDIT WORKING DIRECTORY*******
+# My files were huge and had hudreds of comparisons to do
 
+So I splitted my job into a bunch of smaller jobs on computecanada
 
-```python
+For that,
+
+1.First I used a sample file to come up with the combination_list with all the possible combinations (running previos script on local machine for a smaller file
+
+2. Then I splitted that file into a bunch of smaller files like this
+```
+split --numeric-suffixes=1 -l 6 combination_list.tsv "combination"
+```
+3. Then I had to rename first 9 files to get rid of '0' at the begining
+```
+mv file01 file1
+```
+4. Then I made a directory for outputs
+```
+mkdir outputs
+```
+5. then ran the following python script using the commands in this bash script
+
+```bash
+#!/bin/sh
+#SBATCH --job-name=bwa_505
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=24:00:00
+#SBATCH --mem=2gb
+#SBATCH --output=comp_pop.%J.out
+#SBATCH --error=comp_pop.%J.err
+#SBATCH --account=def-ben
+#SBATCH --array=1-69
+
+#SBATCH --mail-user=premacht@mcmaster.ca
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=REQUEUE
+#SBATCH --mail-type=ALL
+
+module load StdEnv/2020 python/3.8.2
+virtualenv --no-download ~/ENV
+source ~/ENV/bin/activate
+pip install --no-index --upgrade pip
+pip install pandas --no-index
+
+python3 compare_populations.py testing.tab my_samp_list_with_sex_and_pop.txt Y N ./splitted_combination_lists/combination${SLURM_ARRAY_TASK_ID} outputs/sample_summary_output${SLURM_ARRAY_TASK_ID}.txt s_list_1.txt s_list_2.txt s_list_3.txt
+```
+Arguments in the same order are
+
+1. tab file name
+2. sample list with sex and population file name
+3. Do you want to use all the population combinations? PLease enter Y or N
+4. Do you want to run this for all possible combinations (Y/N)? - Had to answer N to use seperate/ multiple sample lists
+5. combination list to be used
+6. output file name
+7. Sample list to be used for pop1
+8. Sample list to be used for pop2
+9. Sample list to be used for pop3
+
+# compare_populations.py
+```
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -723,10 +829,12 @@ import numpy as np
 import csv
 import ast
 from numpy.random import randint
+from itertools import chain
 import sys
 
+
 # to get the current working directory
-directory = "/Users/Tharindu/Library/CloudStorage/OneDrive-McMasterUniversity/for_lab_and_research/Tharindu_on_Mac/lab/python_projects/population_comparison/More_efficient_pop_comp_new"
+directory = "/scratch/premacht/python_projects_2023/combined_chrs_more_efficient"
 os. chdir(directory)
 print('working in', directory)
 print('\n\n\n\n\n')
@@ -902,6 +1010,7 @@ if using_all_combos=='N':
     print('\n\n***************************\n')
     #time.sleep(2.5)
     file_with_locs = file_with_locs[file_with_locs.ne('./.').all(1)]
+    file_with_locs = file_with_locs[file_with_locs.ne('*').all(1)]
 
 
     # ***** pop1******
@@ -1111,31 +1220,80 @@ if using_all_combos=='N':
     print("\n"+"all equal in "+str(all_equal)+"\n\n"+"a = b in "+str(a_eq_b_not_c)+'\n'+'a = c in '+str(a_eq_c_not_b)+'\n'+'b = c in '+str(b_eq_c_not_a))
 
 else:
+    #get the summary file name
+    summary_saving_name=sys.argv[6]
 
 
     # get all the possible populatiopn combinations
     
     import itertools
-    pop_lists=[my_samp_list,my_samp_list,my_samp_list]
+    
+    # ask for population lists to use as pop1 , 2 and 3
+    
+    s_list_1=sys.argv[7]
+    s_list_2=sys.argv[8]
+    s_list_3=sys.argv[9]
+    
+    
+    file1 = open(s_list_1, "r")
+    list1=list(csv.reader(file1, delimiter="\t"))
+    list1=list(chain.from_iterable(list1))
+    
+    file2 = open(s_list_2, "r")
+    list2=list(csv.reader(file2, delimiter="\t"))
+    list2=list(chain.from_iterable(list2))
+    
+    
+    file3 = open(s_list_3, "r")
+    list3=list(csv.reader(file3, delimiter="\t"))
+    list3=list(chain.from_iterable(list3))
+    
+    pop_lists=[list1,list2,list3]
+    
+    #pop_lists=[my_samp_list,my_samp_list,my_samp_list]
     
     
     #get all combinations
     all_pop_combinations=list(itertools.product(*pop_lists))
     
+    
     #remove duplicates
     combination_list=list({*map(tuple, map(sorted, all_pop_combinations))})
+
     
+    #convert list to df
+    combination_list=pd.DataFrame(combination_list)
+    
+    #drop cols rows with equal vals
+    combination_list = combination_list.drop(combination_list[combination_list[0] == combination_list[1]].index)
+    
+    print('Saving a list of all possible combinations')
+    combination_list.to_csv('combination_list.tsv',sep='\t',index=False)
+    
+    combination_file_desicion=sys.argv[4]
+    if combination_file_desicion=='Y':
+        combination_file='combination_list.tsv'
+    else:
+        combination_file=sys.argv[5]
+    
+    
+    
+    combination_list=pd.read_table(combination_file)
+    combination_list.columns=['p1','p2','p3']
+        
     # Create df to store data
     summary_df = pd.DataFrame(columns=['p1','p2','p3','all equal','a=b','a=c','b=c'])
     
     for combo in range(0,len(combination_list)) :
         
     
-        p1=combination_list[combo][0]
-        p2=combination_list[combo][1]
-        p3=combination_list[combo][2]
+        p1=combination_list['p1'][combo]
+        p2=combination_list['p2'][combo]
+        p3=combination_list['p3'][combo]
         
         if p1!=p2 and p1!=p3 and p2!=p3:
+            
+            print('Running iteration '+str(combo)+' out of total'+str(len(combination_list)))
         
             #avoid using same individual as different pops
             
@@ -1160,8 +1318,9 @@ else:
             print('\n\n***************************\n')
             print('Removing empties')
             print('\n\n***************************\n')
-            time.sleep(2.5)
+            #time.sleep(2.5)
             file_with_locs = file_with_locs[file_with_locs.ne('./.').all(1)]
+            file_with_locs = file_with_locs[file_with_locs.ne('*').all(1)]
             
             
             # ***** pop1******
@@ -1371,6 +1530,8 @@ else:
             summary_df.loc[len(summary_df.index)] = to_write
             
             # saving as tsv file 
-            summary_df.to_csv('full_summary.tsv', sep="\t",index=False) 
+            summary_df.to_csv(summary_saving_name, sep="\t",index=False)
 ```
+
+
 
