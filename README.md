@@ -1,6 +1,7 @@
 # More_efficient_pop_comp_new
 
 First I combined all the tab files into one file removing the header
+(after converting vcf to tab)
 ```
 tail -q -n +2 *selected.vcf.gz.tab > combined_chrs.tab
 ```
