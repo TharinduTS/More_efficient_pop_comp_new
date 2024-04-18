@@ -747,7 +747,7 @@ else:
 # for that, I can either use the python script below to run multiple parellel jobs on my computer with the following command (this is going to open a new window for each new job)
 
 ```bash
-for i in {40..46} ;do osascript -e 'tell application "Terminal" to do script "cd /Users/Tharindu/Library/CloudStorage/OneDrive-McMasterUniversity/for_lab_and_research/Tharindu_on_Mac/lab/python_projects/population_comparison/More_efficient_pop_comp_new ;python3 compare_populations_multiple_submissions.sh testing.tab my_samp_list_with_sex_and_pop.txt Y N ./splitted_combination_lists/combination46 outputs/sample_summary_output46.txt s_list_1.txt s_list_2.txt s_list_3.txt"'; done
+for i in {40..41} ;do osascript -e 'tell application "Terminal" to do script "cd /Users/Tharindu/Library/CloudStorage/OneDrive-McMasterUniversity/for_lab_and_research/Tharindu_on_Mac/lab/python_projects/population_comparison/More_efficient_pop_comp_new ;python3 compare_populations_multiple_submissions.sh ./testing.tab  my_samp_list_with_sex_and_pop.txt Y N ./splitted_combination_lists/combination'${i}' outputs/sample_summary_output'${i}'.txt s_list_1.txt s_list_2.txt s_list_3.txt"'; done
 
 ```
 # or follow following steps on computecanada
