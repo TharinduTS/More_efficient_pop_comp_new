@@ -1562,6 +1562,6 @@ else:
 This gives a lot of output files for different parts of the tab file and different individual combinations. You can combine files with all different combinations with following command
 ```
 mkdir combined_summaries
-for i in {1..46};do tail -q -n +2 sample_summary_part$i* > combined_summaries/combined_summary_part_${i}.tab ; done
+for i in {1..11};do tail -q -n +2 sample_summary_part$i* > combined_summaries/combined_summary_part_${i}.tab ; done
 ```
 
