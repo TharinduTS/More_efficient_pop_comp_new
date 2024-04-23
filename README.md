@@ -778,7 +778,7 @@ mv file01 file1
 ```
 mkdir outputs
 ```
-5. then ran the following python script using the commands in this bash script
+5. then ran the following python script ******CHANGING combined_chrs_part***** using the commands in this bash script
 
 ```bash
 #!/bin/sh
@@ -786,11 +786,11 @@ mkdir outputs
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=24:00:00
-#SBATCH --mem=2gb
+#SBATCH --mem=64gb
 #SBATCH --output=comp_pop.%J.out
 #SBATCH --error=comp_pop.%J.err
 #SBATCH --account=def-ben
-#SBATCH --array=1-69
+#SBATCH --array=1-46
 
 #SBATCH --mail-user=premacht@mcmaster.ca
 #SBATCH --mail-type=BEGIN
@@ -805,7 +805,7 @@ source ~/ENV/bin/activate
 pip install --no-index --upgrade pip
 pip install pandas --no-index
 
-python3 compare_populations.py testing.tab my_samp_list_with_sex_and_pop.txt Y N ./splitted_combination_lists/combination${SLURM_ARRAY_TASK_ID} outputs/sample_summary_output${SLURM_ARRAY_TASK_ID}.txt s_list_1.txt s_list_2.txt s_list_3.txt
+python compare_populations.py combined_chrs_part01 my_samp_list_with_sex_and_pop.txt Y N ./splitted_combination_lists/combination${SLURM_ARRAY_TASK_ID} outputs/sample_summary_part1_output${SLURM_ARRAY_TASK_ID}.txt s_list_1.txt s_list_2.txt s_list_3.txt
 ```
 Arguments in the same order are
 
@@ -819,6 +819,10 @@ Arguments in the same order are
 8. Sample list to be used for pop2
 9. Sample list to be used for pop3
 
+You can submit all jobs at once with
+```
+for i in run_comparisons_part*; do echo ${i};done
+```
 # compare_populations.py
 ```
 #!/usr/bin/env python3
