@@ -762,7 +762,15 @@ For that,
 ```
 split --numeric-suffixes=1 -l 6 combination_list.tsv "combination"
 ```
-3. Then I had to rename first 9 files to get rid of '0' at the begining
+and did the same to the combined chrs file so it is more efficient
+```
+split --numeric-suffixes=1 -l 6 combined_chrs.tab "combined_chrs_part"
+```
+and added headers to all of them
+```
+for i in combined_chrs_part*; do echo -e "#CHROM\tPOS\tREF\tF_Ghana_WZ_BJE4687_combined__sorted.bam\tF_IvoryCoast_xen228_combined__sorted.bam\tF_Nigeria_EUA0331_combined__sorted.bam\tF_Nigeria_EUA0333_combined__sorted.bam\tF_SierraLeone_AMNH17272_combined__sorted.bam\tF_SierraLeone_AMNH17274_combined__sorted.bam\tJBL052_concatscafs_sorted.bam\tM_Ghana_WY_BJE4362_combined__sorted.bam\tM_Ghana_ZY_BJE4360_combined__sorted.bam\tM_Nigeria_EUA0334_combined__sorted.bam\tM_Nigeria_EUA0335_combined__sorted.bam\tM_SierraLeone_AMNH17271_combined__sorted.bam\tM_SierraLeone_AMNH17273_combined__sorted.bam\tXT10_WZ_no_adapt._sorted.bam\tXT11_WW_trim_no_adapt_scafconcat_sorted.bam\tXT1_ZY_no_adapt._sorted.bam\tXT7_WY_no_adapt__sorted.bam\tall_ROM19161_sorted.bam\tall_calcaratus_sorted.bam\tmello_GermSeq_sorted.bam" | cat - ${i} >/tmp/out && mv /tmp/out ${i} ;done
+```
+3. Then I had to rename first 9 files to get rid of '0' at the begining of combination files
 ```
 mv file01 file1
 ```
