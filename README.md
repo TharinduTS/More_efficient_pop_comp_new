@@ -762,6 +762,12 @@ For that,
 ```
 split --numeric-suffixes=1 -l 6 combination_list.tsv "combination"
 ```
+Then I had to add column nnames to these combinations to keep it consistent
+```
+for i in combination*; do echo -e "0\t1\t2" | cat - ${i} >/tmp/out && mv /tmp/out ${i} ;done
+```
+********and remove extra title from combination 1*****
+
 and did the same to the combined chrs file so it is more efficient
 ```
 split --numeric-suffixes=1 -l 6 combined_chrs.tab "combined_chrs_part"
