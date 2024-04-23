@@ -827,7 +827,7 @@ Arguments in the same order are
 
 You can submit all jobs at once with
 ```
-for i in run_comparisons_part*; do echo ${i};done
+for i in run_comparisons_part*; do sbatch ${i};done
 ```
 # compare_populations.py
 ```
