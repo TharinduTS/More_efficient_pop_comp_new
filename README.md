@@ -1562,6 +1562,329 @@ else:
 This gives a lot of output files for different parts of the tab file and different individual combinations. You can combine files with all different combinations with following command
 ```
 mkdir combined_summaries
-for i in {1..11};do tail -q -n +2 sample_summary_part$i* > combined_summaries/combined_summary_part_${i}.tab ; done
+for i in {1..9};do tail -q -n +2 sample_summary_part0$i* > combined_summaries/combined_summary_part_${i}.tab ; done
+for i in {10..11};do tail -q -n +2 sample_summary_part$i* > combined_summaries/combined_summary_part_${i}.tab ; done
 ```
+
+Then I downloaded all the data and used following r script to arrange and plot data
+
+```R
+library("rstudioapi") 
+setwd(dirname(getActiveDocumentContext()$path))
+library(forcats)
+library(reshape)
+library(tidyr)
+library(ggplot2)
+#install.packages("rlist")
+library(rlist)
+#install.packages("insight")
+library(insight)
+#print_color("ERROR", "red")
+library(plyr)
+
+# first I have to load all data from different parts and add them together
+
+# **** Chnage the 'range_of_parts' to match the no of parts here
+
+
+range_of_parts<-c(3:4)
+for (i in range_of_parts) {
+  assign(paste('my_dataset_',i,sep = ''),read.csv(paste('./combined_summaries/combined_summary_part_',i,'.tab',sep = ''),sep = '\t',header = FALSE,col.names = c('p1','p2','p3','equal_in_all_pops','Pop_A_equals_Pop_B','Pop_A_equals_Pop_C','Pop_B_equals_Pop_C')))
+}
+
+# loading a placeholder df as the sum df(to add all values together)
+
+my_data<-my_dataset_3
+
+
+#set all of its values to 0
+
+my_data$equal_in_all_pops<-0
+my_data$Pop_A_equals_Pop_B<-0
+my_data$Pop_A_equals_Pop_C<-0
+my_data$Pop_B_equals_Pop_C<-0
+
+#checking for the same order of columns between dfs
+for (part in range_of_parts) {
+  current_df_name<-paste('my_dataset_',part,sep = '')
+  current_df<-get(current_df_name)
+  
+  checked_list<-purrr::map2_dbl(my_dataset_3$p1, current_df$p1, ~sum(.x == .y))
+  allSame <- function(x) length(unique(x)) == 1
+  is_similiar<-allSame(checked_list)
+  if (is_similiar==TRUE) {
+    print(paste('Datase 1 pop1 order is equal to Dataset ',part,'pop1. GOOD TO PROCEED'))
+  }
+  if(is_similiar==FALSE) {
+    print_color(paste('Datase 1 pop1 order is NOT equal to Dataset ',part,'pop1. *****PLEASE CHECK AND RE ARRANGE*****'),'red')
+    Sys.sleep(2)
+  }
+  
+  checked_list<-purrr::map2_dbl(my_dataset_3$p2, current_df$p2, ~sum(.x == .y))
+  allSame <- function(x) length(unique(x)) == 1
+  is_similiar<-allSame(checked_list)
+  if (is_similiar==TRUE) {
+    print(paste('Datase 1 pop2 order is equal to Dataset ',part,'pop2. GOOD TO PROCEED'))
+  }
+  if(is_similiar==FALSE) {
+    print_color(paste('Datase 1 pop2 order is NOT equal to Dataset ',part,'pop2. *****PLEASE CHECK AND RE ARRANGE*****'),'red')
+    Sys.sleep(2)
+  }
+  
+  checked_list<-purrr::map2_dbl(my_dataset_3$p3, current_df$p3, ~sum(.x == .y))
+  allSame <- function(x) length(unique(x)) == 1
+  is_similiar<-allSame(checked_list)
+  if (is_similiar==TRUE) {
+    print(paste('Datase 1 pop3 order is equal to Dataset ',part,'pop3. GOOD TO PROCEED'))
+  }
+  if(is_similiar==FALSE) {
+    print_color(paste('Datase 1 pop3 order is NOT equal to Dataset ',part,'pop3. *****PLEASE CHECK AND RE ARRANGE*****'),'red')
+    Sys.sleep(2)
+  }
+}
+
+
+
+#sum data for final dataset
+
+for (part in range_of_parts) {
+  current_dataset_name<-paste('my_dataset_',part,sep = '')
+  current_dataset<-get(current_dataset_name)
+  
+  my_data$equal_in_all_pops<-my_data$equal_in_all_pops+current_dataset$equal_in_all_pops
+  my_data$Pop_A_equals_Pop_B<-my_data$Pop_A_equals_Pop_B+current_dataset$Pop_A_equals_Pop_B
+  my_data$Pop_A_equals_Pop_C<-my_data$Pop_A_equals_Pop_C+current_dataset$Pop_A_equals_Pop_C
+  my_data$Pop_B_equals_Pop_C<-my_data$Pop_B_equals_Pop_C+current_dataset$Pop_B_equals_Pop_C
+}
+
+# renaming all samples
+my_data[my_data == "F_SierraLeone_AMNH17272_combined__sorted.bam"] <- "SL-F1"
+my_data[my_data == "F_SierraLeone_AMNH17274_combined__sorted.bam"] <- "SL-F2"
+my_data[my_data == "M_SierraLeone_AMNH17271_combined__sorted.bam"] <- "SL-M1"
+my_data[my_data == "M_SierraLeone_AMNH17273_combined__sorted.bam"] <- "SL-M2"
+my_data[my_data == "all_ROM19161_sorted.bam"] <- "LB-F1"
+my_data[my_data == "F_IvoryCoast_xen228_combined__sorted.bam"] <- "IC-F1"
+my_data[my_data == "F_Ghana_WZ_BJE4687_combined__sorted.bam"] <- "GH-F1"
+my_data[my_data == "M_Ghana_WY_BJE4362_combined__sorted.bam"] <- "GH-M1"
+my_data[my_data == "M_Ghana_ZY_BJE4360_combined__sorted.bam"] <- "GH-M2"
+my_data[my_data == "XT10_WZ_no_adapt._sorted.bam"] <- "LT-F1"
+my_data[my_data == "XT11_WW_trim_no_adapt_scafconcat_sorted.bam"] <- "LT-F2"
+my_data[my_data == "XT1_ZY_no_adapt._sorted.bam"] <- "LT-M1"
+my_data[my_data == "XT7_WY_no_adapt__sorted.bam"] <- "LT-M2"
+my_data[my_data == "F_Nigeria_EUA0331_combined__sorted.bam"] <- "NG-F1"
+my_data[my_data == "F_Nigeria_EUA0333_combined__sorted.bam"] <- "NG-F2"
+my_data[my_data == "M_Nigeria_EUA0334_combined__sorted.bam"] <- "NG-M1"
+my_data[my_data == "M_Nigeria_EUA0335_combined__sorted.bam"] <- "NG-M2"
+
+#*************seperate cal and mello**************
+#*
+cal_data <- subset(my_data, p3== 'all_calcaratus_sorted.bam')
+mello_data<-subset(my_data, p3== 'mello_GermSeq_sorted.bam')
+
+#************Calcaratus***************************
+
+# now I have to switch columns as needed to create the proper shape for plot set
+
+#make dummy list
+new_pop_2<-rep(1: nrow(cal_data))
+new_pop_1<-rep(1: nrow(cal_data))
+
+#not changing pop3 anyway
+new_pop_3<-cal_data$p3
+
+#this does not change
+new_p1_eq_p2<-cal_data$Pop_A_equals_Pop_B
+
+#these do change
+new_p1_eq_p3<-rep(1: nrow(cal_data))
+new_p2_eq_p3<-rep(1: nrow(cal_data))
+
+#make sample list in the correct order
+
+sample_list<-c('SL-F1',
+               'SL-F2',
+               'SL-M1',
+               'SL-M2',
+               'LB-F1',
+               'IC-F1',
+               'GH-F1',
+               'GH-M1',
+               'GH-M2',
+               'LT-F1',
+               'LT-F2',
+               'LT-M1',
+               'LT-M2',
+               'NG-F1',
+               'NG-F2',
+               'NG-M1',
+               'NG-M2')
+
+#sample_list<-list.reverse(sample_list)
+
+# now I have to change pop order and values responsible for them accordingly
+
+for (sample in 1:length(sample_list)) {
+  print(sample_list[sample])
+  
+  for (location in 1:nrow(cal_data)) {
+    if ((cal_data$p1[location])==sample_list[sample]) {
+      new_pop_2[location]<-sample_list[sample]
+      new_pop_1[location]<-cal_data$p2[location]
+      new_p1_eq_p3[location]<-cal_data$Pop_A_equals_Pop_C[location]
+      new_p2_eq_p3[location]<-cal_data$Pop_B_equals_Pop_C[location]
+    }
+    else if ((cal_data$p2[location])==sample_list[sample]) {
+      new_pop_2[location]<-sample_list[sample]
+      new_pop_1[location]<-cal_data$p1[location]
+      new_p1_eq_p3[location]<-cal_data$Pop_B_equals_Pop_C[location]
+      new_p2_eq_p3[location]<-cal_data$Pop_A_equals_Pop_C[location]
+    }
+  }
+  
+}
+
+#Create nfinal cal df with arranged data
+
+final_cal_data=data.frame(unlist(new_pop_1),unlist(new_pop_2),unlist(new_pop_3),unlist(new_p1_eq_p2),unlist(new_p1_eq_p3),unlist(new_p2_eq_p3))
+
+#rename df
+
+colnames(final_cal_data)<-c('p1','p2','p3','Pop_A_equals_Pop_B','Pop_A_equals_Pop_C','Pop_B_equals_Pop_C')
+
+#melt df
+cal_data_to_plot <- final_cal_data %>% 
+  pivot_longer(
+    cols = `Pop_A_equals_Pop_B`:`Pop_A_equals_Pop_C`:'Pop_B_equals_Pop_C', 
+    names_to = "Comparison",
+    values_to = "value"
+  )
+
+# ************************************
+
+
+
+#changing column order to make it look better
+cal_data_to_plot$p2 <- factor(cal_data_to_plot$p2,levels = sample_list)
+cal_data_to_plot$p1 <- factor(cal_data_to_plot$p1,levels = sample_list)
+
+#looking for the highest value in both comparisons so I can use the same scale for both
+
+max_cal<-max(cal_data_to_plot$value)
+max_mello<-max(mello_data_to_plot$value)
+max_y_lim<-max(max_cal,max_mello)
+upper_y<-(round_any(max_y_lim,1000000))/1000000
+
+cal_plot<-ggplot(cal_data_to_plot, aes(x=p2,y = value/1000000,fill=Comparison)) + 
+  geom_bar(position="dodge",stat='identity')+ 
+  facet_wrap(~ p1,nrow = 16)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+  xlab("Sample") + ylab("No. of bp (millions)")+ 
+  scale_fill_manual(values=c("black", "red","purple"))+
+  ylim(0,upper_y)
+
+ggsave("cal_plot.pdf",cal_plot,width = 10,height = 15)
+
+
+#************Mellotrop***************************
+
+# now I have to switch columns as needed to create the proper shape for plot set
+
+#make dummy list
+new_pop_2<-rep(1: nrow(mello_data))
+new_pop_1<-rep(1: nrow(mello_data))
+
+#not changing pop3 anyway
+new_pop_3<-mello_data$p3
+
+#this does not change
+new_p1_eq_p2<-mello_data$Pop_A_equals_Pop_B
+
+#these do change
+new_p1_eq_p3<-rep(1: nrow(mello_data))
+new_p2_eq_p3<-rep(1: nrow(mello_data))
+
+#make sample list in the correct order
+
+sample_list<-c('SL-F1',
+               'SL-F2',
+               'SL-M1',
+               'SL-M2',
+               'LB-F1',
+               'IC-F1',
+               'GH-F1',
+               'GH-M1',
+               'GH-M2',
+               'LT-F1',
+               'LT-F2',
+               'LT-M1',
+               'LT-M2',
+               'NG-F1',
+               'NG-F2',
+               'NG-M1',
+               'NG-M2')
+
+#sample_list<-list.reverse(sample_list)
+
+# now I have to change pop order and values responsible for them accordingly
+
+for (sample in 1:length(sample_list)) {
+  print(sample_list[sample])
+  
+  for (location in 1:nrow(mello_data)) {
+    if ((mello_data$p1[location])==sample_list[sample]) {
+      new_pop_2[location]<-sample_list[sample]
+      new_pop_1[location]<-mello_data$p2[location]
+      new_p1_eq_p3[location]<-mello_data$Pop_A_equals_Pop_C[location]
+      new_p2_eq_p3[location]<-mello_data$Pop_B_equals_Pop_C[location]
+    }
+    else if ((mello_data$p2[location])==sample_list[sample]) {
+      new_pop_2[location]<-sample_list[sample]
+      new_pop_1[location]<-mello_data$p1[location]
+      new_p1_eq_p3[location]<-mello_data$Pop_B_equals_Pop_C[location]
+      new_p2_eq_p3[location]<-mello_data$Pop_A_equals_Pop_C[location]
+    }
+  }
+  
+}
+
+#Create nfinal mello df with arranged data
+
+final_mello_data=data.frame(unlist(new_pop_1),unlist(new_pop_2),unlist(new_pop_3),unlist(new_p1_eq_p2),unlist(new_p1_eq_p3),unlist(new_p2_eq_p3))
+
+#rename df
+
+colnames(final_mello_data)<-c('p1','p2','p3','Pop_A_equals_Pop_B','Pop_A_equals_Pop_C','Pop_B_equals_Pop_C')
+
+#melt df
+mello_data_to_plot <- final_mello_data %>% 
+  pivot_longer(
+    cols = `Pop_A_equals_Pop_B`:`Pop_A_equals_Pop_C`:'Pop_B_equals_Pop_C', 
+    names_to = "Comparison",
+    values_to = "value"
+  )
+
+# ************************************
+
+
+
+#changing column order to make it look better
+mello_data_to_plot$p2 <- factor(mello_data_to_plot$p2,levels = sample_list)
+mello_data_to_plot$p1 <- factor(mello_data_to_plot$p1,levels = sample_list)
+
+
+mello_plot<-ggplot(mello_data_to_plot, aes(x=p2,y = value/1000000,fill=Comparison)) + 
+  geom_bar(position="dodge",stat='identity')+ 
+  facet_wrap(~ p1,nrow = 16)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
+  xlab("Sample") + ylab("No. of bp (millions)")+ 
+  scale_fill_manual(values=c("black", "red","purple"))+
+  ylim(0,upper_y)
+
+ggsave("mello_plot.pdf",mello_plot,width = 10,height = 15)
+```
+
+
+
 
