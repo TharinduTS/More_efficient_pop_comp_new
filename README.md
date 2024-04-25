@@ -1657,6 +1657,12 @@ for (part in range_of_parts) {
   my_data$Pop_B_equals_Pop_C<-my_data$Pop_B_equals_Pop_C+current_dataset$Pop_B_equals_Pop_C
 }
 
+#saving a copy to proof read
+
+write.table(my_data,file = './combined_dataframe_unarranged.tsv', sep='\t', col.names = NA)
+
+
+
 # renaming all samples
 my_data[my_data == "F_SierraLeone_AMNH17272_combined__sorted.bam"] <- "SL-F1"
 my_data[my_data == "F_SierraLeone_AMNH17274_combined__sorted.bam"] <- "SL-F2"
@@ -1718,24 +1724,24 @@ sample_list<-c('SL-F1',
                'NG-F2',
                'NG-M1',
                'NG-M2')
-
-#sample_list<-list.reverse(sample_list)
+#reverse sample list to make it upside down triange. *****This is used to adjust the no of comparisons for each sample in next step****
+sample_list_reversed<-list.reverse(sample_list)
 
 # now I have to change pop order and values responsible for them accordingly
 
-for (sample in 1:length(sample_list)) {
-  print(sample_list[sample])
+for (sample in 1:length(sample_list_reversed)) {
+  print(sample_list_reversed[sample])
   
   for (location in 1:nrow(cal_data)) {
-    if ((cal_data$p1[location])==sample_list[sample]) {
-      new_pop_2[location]<-sample_list[sample]
-      new_pop_1[location]<-cal_data$p2[location]
+    if ((cal_data$p1[location])==sample_list_reversed[sample]) {
+      new_pop_1[location]<-sample_list_reversed[sample]
+      new_pop_2[location]<-cal_data$p2[location]
       new_p1_eq_p3[location]<-cal_data$Pop_A_equals_Pop_C[location]
       new_p2_eq_p3[location]<-cal_data$Pop_B_equals_Pop_C[location]
     }
-    else if ((cal_data$p2[location])==sample_list[sample]) {
-      new_pop_2[location]<-sample_list[sample]
-      new_pop_1[location]<-cal_data$p1[location]
+    else if ((cal_data$p2[location])==sample_list_reversed[sample]) {
+      new_pop_1[location]<-sample_list_reversed[sample]
+      new_pop_2[location]<-cal_data$p1[location]
       new_p1_eq_p3[location]<-cal_data$Pop_B_equals_Pop_C[location]
       new_p2_eq_p3[location]<-cal_data$Pop_A_equals_Pop_C[location]
     }
@@ -1743,18 +1749,23 @@ for (sample in 1:length(sample_list)) {
   
 }
 
+
 #Create nfinal cal df with arranged data
 
 final_cal_data=data.frame(unlist(new_pop_1),unlist(new_pop_2),unlist(new_pop_3),unlist(new_p1_eq_p2),unlist(new_p1_eq_p3),unlist(new_p2_eq_p3))
 
+#saving a copy to proof read
+
+write.table(final_cal_data,file = './cal_arranged_df.tsv', sep='\t', col.names = NA)
+
 #rename df
 
-colnames(final_cal_data)<-c('p1','p2','p3','Pop_A_equals_Pop_B','Pop_A_equals_Pop_C','Pop_B_equals_Pop_C')
+colnames(final_cal_data)<-c('p1','p2','p3','A similiar to B','A similiar to C','B similiar to C')
 
 #melt df
 cal_data_to_plot <- final_cal_data %>% 
   pivot_longer(
-    cols = `Pop_A_equals_Pop_B`:`Pop_A_equals_Pop_C`:'Pop_B_equals_Pop_C', 
+    cols = `A similiar to B`:`A similiar to C`:'B similiar to C', 
     names_to = "Comparison",
     values_to = "value"
   )
@@ -1779,9 +1790,11 @@ cal_plot<-ggplot(cal_data_to_plot, aes(x=p2,y = value/1000000,fill=Comparison)) 
   facet_wrap(~ p1,nrow = 16)+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
-  xlab("Sample") + ylab("No. of bp (millions)")+ 
+  xlab("Individual B") + ylab("No. of bp (millions)")+ 
   scale_fill_manual(values=c("black", "red","purple"))+
-  ylim(0,upper_y)
+  ylim(0,upper_y)+
+  ggtitle("Individual A")+
+  theme(plot.title = element_text(hjust = 0.5,size = 10))
 
 ggsave("cal_plot.pdf",cal_plot,width = 10,height = 15)
 
@@ -1823,24 +1836,24 @@ sample_list<-c('SL-F1',
                'NG-F2',
                'NG-M1',
                'NG-M2')
-
-#sample_list<-list.reverse(sample_list)
+#reverse sample list to make it upside down triange. *****This is used to adjust the no of comparisons for each sample in next step****
+sample_list_reversed<-list.reverse(sample_list)
 
 # now I have to change pop order and values responsible for them accordingly
 
-for (sample in 1:length(sample_list)) {
-  print(sample_list[sample])
+for (sample in 1:length(sample_list_reversed)) {
+  print(sample_list_reversed[sample])
   
   for (location in 1:nrow(mello_data)) {
-    if ((mello_data$p1[location])==sample_list[sample]) {
-      new_pop_2[location]<-sample_list[sample]
-      new_pop_1[location]<-mello_data$p2[location]
+    if ((mello_data$p1[location])==sample_list_reversed[sample]) {
+      new_pop_1[location]<-sample_list_reversed[sample]
+      new_pop_2[location]<-mello_data$p2[location]
       new_p1_eq_p3[location]<-mello_data$Pop_A_equals_Pop_C[location]
       new_p2_eq_p3[location]<-mello_data$Pop_B_equals_Pop_C[location]
     }
-    else if ((mello_data$p2[location])==sample_list[sample]) {
-      new_pop_2[location]<-sample_list[sample]
-      new_pop_1[location]<-mello_data$p1[location]
+    else if ((mello_data$p2[location])==sample_list_reversed[sample]) {
+      new_pop_1[location]<-sample_list_reversed[sample]
+      new_pop_2[location]<-mello_data$p1[location]
       new_p1_eq_p3[location]<-mello_data$Pop_B_equals_Pop_C[location]
       new_p2_eq_p3[location]<-mello_data$Pop_A_equals_Pop_C[location]
     }
@@ -1848,18 +1861,23 @@ for (sample in 1:length(sample_list)) {
   
 }
 
+
 #Create nfinal mello df with arranged data
 
 final_mello_data=data.frame(unlist(new_pop_1),unlist(new_pop_2),unlist(new_pop_3),unlist(new_p1_eq_p2),unlist(new_p1_eq_p3),unlist(new_p2_eq_p3))
 
+#saving a copy to proof read
+
+write.table(final_mello_data,file = './mello_arranged_df.tsv', sep='\t', col.names = NA)
+
 #rename df
 
-colnames(final_mello_data)<-c('p1','p2','p3','Pop_A_equals_Pop_B','Pop_A_equals_Pop_C','Pop_B_equals_Pop_C')
+colnames(final_mello_data)<-c('p1','p2','p3','A similiar to B','A similiar to C','B similiar to C')
 
 #melt df
 mello_data_to_plot <- final_mello_data %>% 
   pivot_longer(
-    cols = `Pop_A_equals_Pop_B`:`Pop_A_equals_Pop_C`:'Pop_B_equals_Pop_C', 
+    cols = `A similiar to B`:`A similiar to C`:'B similiar to C', 
     names_to = "Comparison",
     values_to = "value"
   )
@@ -1872,17 +1890,26 @@ mello_data_to_plot <- final_mello_data %>%
 mello_data_to_plot$p2 <- factor(mello_data_to_plot$p2,levels = sample_list)
 mello_data_to_plot$p1 <- factor(mello_data_to_plot$p1,levels = sample_list)
 
+#looking for the highest value in both comparisons so I can use the same smelloe for both
+
+max_mello<-max(mello_data_to_plot$value)
+max_mello<-max(mello_data_to_plot$value)
+max_y_lim<-max(max_mello,max_mello)
+upper_y<-(round_any(max_y_lim,1000000))/1000000
 
 mello_plot<-ggplot(mello_data_to_plot, aes(x=p2,y = value/1000000,fill=Comparison)) + 
   geom_bar(position="dodge",stat='identity')+ 
   facet_wrap(~ p1,nrow = 16)+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))+
-  xlab("Sample") + ylab("No. of bp (millions)")+ 
+  xlab("Individual B") + ylab("No. of bp (millions)")+ 
   scale_fill_manual(values=c("black", "red","purple"))+
-  ylim(0,upper_y)
+  ylim(0,upper_y)+
+  ggtitle("Individual A")+
+  theme(plot.title = element_text(hjust = 0.5,size = 10))
 
 ggsave("mello_plot.pdf",mello_plot,width = 10,height = 15)
+
 ```
 
 
