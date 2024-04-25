@@ -1560,6 +1560,7 @@ else:
             summary_df.to_csv(summary_saving_name, sep="\t",index=False)
 ```
 This gives a lot of output files for different parts of the tab file and different individual combinations. You can combine files with all different combinations with following command
+I had to use multiple loops here because some numbers had 0 in the begining
 ```
 mkdir combined_summaries
 for i in {1..9};do tail -q -n +2 sample_summary_part0$i* > combined_summaries/combined_summary_part_${i}.tab ; done
