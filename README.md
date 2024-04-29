@@ -768,6 +768,7 @@ for i in combination*; do echo -e "0\t1\t2" | cat - ${i} >/tmp/out && mv /tmp/ou
 ```
 
 # ** For some reason, my script had missed a few population combinations. So I added them to the last set of comparisons, manually. ********
+# I had to amnually correct some file names because some arrays use 01,02 etc while others use 1,2. Please check this if you run into any issues
 
 ********and remove extra title from combination 1*****
 
@@ -1566,7 +1567,7 @@ This gives a lot of output files for different parts of the tab file and differe
 I had to use multiple loops here because some numbers had 0 in the begining
 ```
 mkdir combined_summaries
-for i in {1..9};do tail -q -n +2 sample_summary_part0$i* > combined_summaries/combined_summary_part_${i}.tab ; done
+for i in {2..9};do tail -q -n +2 sample_summary_part0$i* > combined_summaries/combined_summary_part_${i}.tab ; done
 for i in {10..11};do tail -q -n +2 sample_summary_part$i* > combined_summaries/combined_summary_part_${i}.tab ; done
 tail -q -n +2 sample_summary_part1_* > combined_summaries/combined_summary_part_1.tab
 ```
@@ -1594,8 +1595,8 @@ library(plyr)
 
 # **** Chnage the 'range_of_parts' to match the no of parts here
 
-
-range_of_parts<-c(3:4)
+#part 11 didn't have anything and was left out
+range_of_parts<-c(1:10)
 for (i in range_of_parts) {
   assign(paste('my_dataset_',i,sep = ''),read.csv(paste('./combined_summaries/combined_summary_part_',i,'.tab',sep = ''),sep = '\t',header = FALSE,col.names = c('p1','p2','p3','equal_in_all_pops','Pop_A_equals_Pop_B','Pop_A_equals_Pop_C','Pop_B_equals_Pop_C')))
 }
@@ -1689,6 +1690,13 @@ my_data[my_data == "F_Nigeria_EUA0331_combined__sorted.bam"] <- "NG-F1"
 my_data[my_data == "F_Nigeria_EUA0333_combined__sorted.bam"] <- "NG-F2"
 my_data[my_data == "M_Nigeria_EUA0334_combined__sorted.bam"] <- "NG-M1"
 my_data[my_data == "M_Nigeria_EUA0335_combined__sorted.bam"] <- "NG-M2"
+
+#looking for the highest value in both comparisons so I can use the same scale for both
+
+
+max_y_lim<-max(my_data$Pop_A_equals_Pop_B,my_data$Pop_A_equals_Pop_C,my_data$Pop_B_equals_Pop_C)
+upper_y<-(round_any(max_y_lim,1000000))/1000000
+
 
 #*************seperate cal and mello**************
 #*
@@ -1786,12 +1794,7 @@ cal_data_to_plot <- final_cal_data %>%
 cal_data_to_plot$p2 <- factor(cal_data_to_plot$p2,levels = sample_list)
 cal_data_to_plot$p1 <- factor(cal_data_to_plot$p1,levels = sample_list)
 
-#looking for the highest value in both comparisons so I can use the same scale for both
-
-max_cal<-max(cal_data_to_plot$value)
-max_mello<-max(mello_data_to_plot$value)
-max_y_lim<-max(max_cal,max_mello)
-upper_y<-(round_any(max_y_lim,1000000))/1000000
+#plot
 
 cal_plot<-ggplot(cal_data_to_plot, aes(x=p2,y = value/1000000,fill=Comparison)) + 
   geom_bar(position="dodge",stat='identity')+ 
@@ -1917,6 +1920,7 @@ mello_plot<-ggplot(mello_data_to_plot, aes(x=p2,y = value/1000000,fill=Compariso
   theme(plot.title = element_text(hjust = 0.5,size = 10))
 
 ggsave("mello_plot.pdf",mello_plot,width = 10,height = 15)
+
 
 ```
 
