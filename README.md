@@ -766,6 +766,9 @@ Then I had to add column nnames to these combinations to keep it consistent
 ```
 for i in combination*; do echo -e "0\t1\t2" | cat - ${i} >/tmp/out && mv /tmp/out ${i} ;done
 ```
+
+# ** For some reason, my script had missed a few population combinations. So I added them to the last set of comparisons, manually. ********
+
 ********and remove extra title from combination 1*****
 
 and did the same to the combined chrs file so it is more efficient
@@ -1565,9 +1568,13 @@ I had to use multiple loops here because some numbers had 0 in the begining
 mkdir combined_summaries
 for i in {1..9};do tail -q -n +2 sample_summary_part0$i* > combined_summaries/combined_summary_part_${i}.tab ; done
 for i in {10..11};do tail -q -n +2 sample_summary_part$i* > combined_summaries/combined_summary_part_${i}.tab ; done
+tail -q -n +2 sample_summary_part1_* > combined_summaries/combined_summary_part_1.tab
 ```
 
 Then I downloaded all the data and used following r script to arrange and plot data
+```
+rsync -axvH --no-g --no-p premacht@graham.computecanada.ca:/scratch/premacht/python_projects_2023/combined_chrs_more_efficient/outputs/combined_summaries .
+```
 
 ```R
 library("rstudioapi") 
