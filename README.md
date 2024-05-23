@@ -516,6 +516,8 @@ else:
             
             # read selected columns
             file_with_locs=pd.read_csv(inputfile, sep='\t',usecols=['#CHROM','POS',p1,p2,p3])
+            # rearrange populations to make sure they are in the proper order
+            file_with_locs = file_with_locs.reindex(['#CHROM','POS',p1,p2,p3], axis=1)
             
             #rename
             file_with_locs.columns=['chr','pos','p1','p2','p3']
@@ -1028,6 +1030,8 @@ if using_all_combos=='N':
 
     # read selected columns
     file_with_locs=pd.read_csv(inputfile, sep='\t',usecols=['#CHROM','POS',p1,p2,p3])
+    # rearrange populations to make sure they are in the proper order
+    file_with_locs = file_with_locs.reindex(['#CHROM','POS',p1,p2,p3], axis=1)
 
     # rearrange populations to make sure they are in the proper order
     file_with_locs = file_with_locs.reindex(['#CHROM','POS',p1,p2,p3],axis=1)
@@ -1341,6 +1345,8 @@ else:
             
             # read selected columns
             file_with_locs=pd.read_csv(inputfile, sep='\t',usecols=['#CHROM','POS',p1,p2,p3])
+            # rearrange populations to make sure they are in the proper order
+            file_with_locs = file_with_locs.reindex(['#CHROM','POS',p1,p2,p3], axis=1)
             
             #rename
             file_with_locs.columns=['chr','pos','p1','p2','p3']
